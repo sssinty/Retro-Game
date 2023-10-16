@@ -1,0 +1,19 @@
+{
+  "extends": "airbnb-base",
+  "env": {
+      "browser": true,
+      "es2021": true,
+      "jest": true
+  },
+  "rules": {
+      "no-restricted-syntax": [
+          "error",
+          "LabeledStatement",
+          "WithStatement"
+      ]
+ },
+ "parserOptions": {
+  "ecmaVersion": 2018,
+  "sourceType": "module"
+ }
+}
