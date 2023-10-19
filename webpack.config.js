@@ -1,49 +1,55 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const FileManagerPlugin = require('filemanager-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  context: path.resolve(__dirname, 'src'),
+  entry: './src/index.js',
   mode: 'development',
-  entry: {
-      main: './src/index.js'
-  },
   output: {
-      filename: '[name].[hash].js',
-      path: path.resolve(__dirname, 'dist'),
-      clean: true
+    filename: 'main.js',
+    path: path.resolve(__dirname, 'dist'),
+  },
+  devServer: {
+    watchFiles: path.join(__dirname, 'src'),
+    port: 9000,
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        use: 'babel-loader',
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.css$/i,
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+      {
+        test: /\.(png|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
+      },
+      {
+        test: /\.svg$/,
+        type: 'asset/resource',
+        generator: {
+          filename: path.join('img', '[name].[contenthash][ext]'),
+        },
+      },
+    ],
   },
   plugins: [
-      new HtmlWebpackPlugin({
-          template: "./src/index.html"
-      })
+    new FileManagerPlugin({
+      events: {
+        onStart: {
+          delete: ['dist'],
+        },
+      },
+    }),
+    new MiniCssExtractPlugin(),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, 'src', 'index.html'),
+      filename: 'index.html',
+    }),
   ],
-module: {
-  rules: [
-  {
-    test: /\.html$/,
-    use: 'html-loader'
-  },
-  {
-    test: /\.css$/,
-    use: ['style-loader', 'css-loader']
-  },
-  {
-    test: /\.(jpg|png|svg|jpeg|gif)$/,
-    type: 'asset/resource'
-  },
-  {
-    test: /\.(png|jpg|gif)$/i,
-    dependency: { not: ['url'] },
-    use: [
-      {
-        loader: 'url-loader',
-        options: {
-          limit: 8192,
-        }
-      }
-    ],
-    type: 'javascript/auto'
-  }
-  ]
-}
 };
