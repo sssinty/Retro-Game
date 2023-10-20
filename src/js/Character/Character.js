@@ -14,10 +14,10 @@
  */
 export default class Character {
   constructor(level, type = 'generic') {
-    if (new.target) {
+    if (!new.target === Character) {
       throw new Error('Ошибка, создание родительского класса недоступен');
     }
-    const typeObject = ['Bowman', 'Swordsman', 'Magician', 'Undead', 'Zombie', 'Daemon'];
+    const typeObject = ['Bowman', 'Swordsman', 'Magician', 'Undead', 'Vampire', 'Daemon'];
     if (!typeObject.includes(type)) {
       throw new Error('Такого типа не существует!');
     } else {
@@ -26,7 +26,7 @@ export default class Character {
     this.level = level;
     this.attack = 0;
     this.defence = 0;
-    this.health = 50;
+    this.health = 100;
     // TODO: выбросите исключение, если кто-то использует "new Character()"
   }
 }

@@ -1,4 +1,4 @@
-import { Team } from './Team';
+import Team from './Team';
 
 /**
  * Формирует экземпляр персонажа из массива allowedTypes со
@@ -29,9 +29,7 @@ export function generateTeam(allowedTypes, maxLevel, characterCount) {
   const newTeam = new Team();
   const character = characterGenerator(allowedTypes, maxLevel);
   for (let i = 0; i < characterCount; i += 1) {
-    newTeam.add(character.next());
+    newTeam.add(character.next().value);
   }
-
-  return newTeam.storage();
-  // TODO: write logic here
+  return newTeam.storage
 }

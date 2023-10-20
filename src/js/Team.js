@@ -11,15 +11,11 @@
  * team.characters // [swordsman, bowman]
  * ```
  * */
-export class Team {
+export default class Team {
   constructor() {
-    this.storage = new Set();
+    this.storage = [];
   }
-  add(character) {
-    if (this.storage.has(character)) {
-      throw new Error('Персонаж уже есть в команде!');
-    }
-    this.storage.add(character);
+  add(character){
+    this.storage.push(character);
   }
-  // TODO: write your logic here
 }
