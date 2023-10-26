@@ -1,5 +1,6 @@
-import calcTileType from '../utils';
-test('test', () => {
+import { calcTileType } from '../utils';
+
+test('test field position', () => {
   expect(calcTileType(0, 8)).toBe('top-left');
   expect(calcTileType(1, 8)).toBe('top');
   expect(calcTileType(7, 8)).toBe('top-right');

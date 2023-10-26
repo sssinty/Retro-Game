@@ -1,45 +1,110 @@
-import { generateTeam } from './generators';
-import Bowman from './Character/Bowman';
-import Daemon from './Character/Daemon';
-import Magician from './character/Magician';
-import Swordsman from './character/Swordsman';
-import Undead from './character/Undead';
-import Vampire from './character/Vampire'
+import { generateTeam, getRandomNumb} from './generators';
+import character from './character/character';
 import PositionedCharacter from './PositionedCharacter';
+import GameState from './GameState';
+import GamePlay from './GamePlay';
+import cursors from './cursors'
 
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.state = new GameState();
+    this.activeCharacter = null;
   }
 
   init() {
     this.gamePlay.drawUi('prairie');
-    const characterArrayPlayer1 = [Bowman, Swordsman, Magician];
-    const characterArrayPlayer2 = [Vampire, Daemon, Undead];
-    const player1Array = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57]
-    const character1 = generateTeam(characterArrayPlayer1, 4, 3)
-    let arr = []
-    for(let index = 0; index < character1.length; index++) {
-      const randomIndex = Math.floor(Math.random() * player1Array.length)
-      arr.push(new PositionedCharacter(character1[index], player1Array[randomIndex]))
-    }
-    for(let index = 0; index < character1.length; index++) {
-      this.gamePlay.redrawPositions(arr[index])
-    }
-    // TODO: add event listeners to gamePlay events
-    // TODO: load saved stated from stateService
+    this.crateCharacter();
+    this.registrationEvents();
   }
 
-  onCellClick(index) {
+  crateCharacter() {
+    const player = generateTeam([character.bowman, character.swordsman, character.magician], 3, 2);
+    const enamy = generateTeam([character.vampire, character.daemon, character.undead], 3, 2);
+    const arrPosition = [];
+
+    player.forEach((character) => {
+      const playerArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, 0, 1, this.gamePlay.boardSize, arrPosition);
+      const positionedCharacters = new PositionedCharacter(character, playerArrayPosition);
+      this.state.positionedCharacters.push(positionedCharacters);
+      positionedCharacters.isPlayer = true;
+      arrPosition.push(positionedCharacters);
+    })
+
+    enamy.forEach((character) => {
+      const enamyArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, this.gamePlay.boardSize - 2, this.gamePlay.boardSize - 1, this.gamePlay.boardSize, arrPosition);
+      const positionedCharacters = new PositionedCharacter(character, enamyArrayPosition);
+      positionedCharacters.isPlayer = false;
+      this.state.positionedCharacters.push(positionedCharacters);
+      arrPosition.push(positionedCharacters);
+    });
+
+    this.gamePlay.redrawPositions(arrPosition);
+
+    function createPosition(minString, maxString, minColumn, maxColumn, boardSize, usedPosition) {
+      let position;
+      let index = 0;
+
+      while ((!position || usedPosition.includes(position)) && index < 1000) {
+        let string = getRandomNumb(minString, maxString);
+        let column = getRandomNumb(minColumn, maxColumn);
+
+        position = string * boardSize + column;
+        index += 1;
+      }
+
+      return position;
+    }
+  }
+  registrationEvents() {
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+  }
+
+  onCellClick(index) {  
+    const elem = this.gamePlay.cells[index];
+    this.state.positionedCharacters.forEach((element) => {
+      if (element.position === index && !element.isPlayer) {
+         GamePlay.showError('Персонаж противника недоступен!');
+      }
+      if (element.position === index && element.isPlayer) {
+        this.gamePlay.cells.forEach((cell, i) => {
+          if (cell.className.indexOf('selected-yellow') > -1) {
+            this.gamePlay.deselectCell(i);
+          } else {
+            this.selectCharacter(elem, index);
+          }
+        });
+      }});
     // TODO: react to click
   }
 
+  static massage(value) {
+    return `\u{1F396} ${value.character.level} \u2694 ${value.character.attack} \u{1F6E1} ${value.character.defence} \u2764 ${value.character.health}`
+  }
+
   onCellEnter(index) {
+    // console.log()
+    // console.log()
+    this.state.positionedCharacters.forEach((element) => {
+      if (element.position === index) {
+        if(element.isPlayer && this.activeCharacter) {
+          this.gamePlay.setCursor(cursors.pointer)
+        }
+        this.gamePlay.showCellTooltip(GameController.massage(element), index);
+      }
+    });
     // TODO: react to mouse enter
   }
 
   onCellLeave(index) {
+    this.gamePlay.hideCellTooltip(index);
     // TODO: react to mouse leave
   }
-}
+
+  selectCharacter(elem, index) {
+    this.activeCharacter = elem;
+    this.gamePlay.selectCell(index);
+  }}
