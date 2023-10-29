@@ -14,7 +14,7 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.drawUi('prairie');
+    this.gamePlay.drawUi('mountain');
     this.crateCharacter();
     this.registrationEvents();
   }
@@ -86,25 +86,49 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    // console.log()
-    // console.log()
-    this.state.positionedCharacters.forEach((element) => {
-      if (element.position === index) {
-        if(element.isPlayer && this.activeCharacter) {
-          this.gamePlay.setCursor(cursors.pointer)
+    const cell = this.gamePlay.cells[index];
+    const character = cell.querySelector('.character');
+
+    if (this.state.move % 2 === 0 && character) {
+      this.state.positionedCharacters.forEach((element) => {
+        if (element.position === index) {
+          if (element.isPlayer && this.activeCharacter) {
+            this.gamePlay.setCursor(cursors.pointer);
+          }
+          if (!element.isPlayer && this.activeCharacter) {
+            this.gamePlay.setCursor(cursors.crosshair);
+            this.gamePlay.selectCell(index, 'red');
+          }
+          this.gamePlay.showCellTooltip(GameController.massage(element), index);
         }
-        this.gamePlay.showCellTooltip(GameController.massage(element), index);
+      });
+    }
+    if (this.state.move % 2 === 0 && this.activeCharacter) {
+      if (this.activeCharacter) {
+        this.gamePlay.selectCell(index, 'green');
+        if (!this.activeCharacter) {
+          this.gamePlay.setCursor(cursors.auto);
+          this.gamePlay.deselectCell(index)
+        }
       }
-    });
+    }
     // TODO: react to mouse enter
   }
 
   onCellLeave(index) {
     this.gamePlay.hideCellTooltip(index);
+    this.gamePlay.setCursor(cursors.pointer);
+    this.gamePlay.cells[index].classList.remove('selected-green');
+    this.gamePlay.cells[index].classList.remove('selected-red');
     // TODO: react to mouse leave
   }
 
   selectCharacter(elem, index) {
     this.activeCharacter = elem;
     this.gamePlay.selectCell(index);
-  }}
+  }
+
+  goPlayer() {
+    
+  }
+}
