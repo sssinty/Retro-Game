@@ -4,6 +4,7 @@ import PositionedCharacter from './PositionedCharacter';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
 import cursors from './cursors'
+import themes from './themes'
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -14,7 +15,7 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.drawUi('mountain');
+    this.gamePlay.drawUi(themes.mountain);
     this.crateCharacter();
     this.registrationEvents();
   }
@@ -65,19 +66,54 @@ export default class GameController {
 
   onCellClick(index) {  
     const elem = this.gamePlay.cells[index];
-    this.state.positionedCharacters.forEach((element) => {
-      if (element.position === index && !element.isPlayer) {
-         GamePlay.showError('Персонаж противника недоступен!');
-      }
-      if (element.position === index && element.isPlayer) {
-        this.gamePlay.cells.forEach((cell, i) => {
-          if (cell.className.indexOf('selected-yellow') > -1) {
-            this.gamePlay.deselectCell(i);
-          } else {
-            this.selectCharacter(elem, index);
+    const character = elem.querySelector('.character');
+  
+      if(this.state.move % 2 === 0 && character && !this.activeCharacter) {
+        this.state.positionedCharacters.forEach((element) => {
+          if (element.position === index && !element.isPlayer) {
+            GamePlay.showError('Персонаж противника недоступен!');
           }
-        });
-      }});
+          if (element.position === index && element.isPlayer) {
+            this.gamePlay.cells.forEach((cell, i) => {
+            if (cell.className.indexOf('selected-yellow') > -1) {
+              this.gamePlay.deselectCell(i);
+            } else {
+              this.selectCharacter(element, index);
+            }
+          });
+        }
+      });
+
+    } else if(this.state.move % 2 === 0 && this.activeCharacter) {
+      this.state.positionedCharacters.forEach((elem) => {
+        if (elem.position === index && !elem.isPlayer && this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize)) {
+          console.log(elem)
+          const damage = this.activeCharacter.character.getDamage(elem.character);
+          if(elem.character.health - damage > 0) {
+            elem.character.health = elem.character.health - damage;
+          } else {
+            this.state.positionedCharacters = this.state.positionedCharacters.filter(character => character.position !== elem.position);
+          }
+          
+          this.gamePlay.showDamage(index, damage).then(
+            this.gamePlay.deselectCell(this.activeCharacter.position),
+            this.removeSelect(index, this.state.positionedCharacters.filter(character => character.condition !== 'death'))
+          )
+
+        }
+      });
+
+    } else if(this.state.move % 2 === 0 && this.activeCharacter && this.activeCharacter.calculationRadiusMove(index, this.gamePlay.boardSize)) {
+        this.state.positionedCharacters.forEach((elem) => {
+        if (elem.position === this.activeCharacter.position) {
+          this.gamePlay.deselectCell(this.activeCharacter.position);
+          elem.position = index;
+        }
+      })
+      this.removeSelect(index, this.state.positionedCharacters);
+    }
+    
+
     // TODO: react to click
   }
 
@@ -91,26 +127,32 @@ export default class GameController {
 
     if (this.state.move % 2 === 0 && character) {
       this.state.positionedCharacters.forEach((element) => {
-        if (element.position === index) {
-          if (element.isPlayer && this.activeCharacter) {
-            this.gamePlay.setCursor(cursors.pointer);
-          }
-          if (!element.isPlayer && this.activeCharacter) {
-            this.gamePlay.setCursor(cursors.crosshair);
-            this.gamePlay.selectCell(index, 'red');
-          }
+        if(element.position === index) {
           this.gamePlay.showCellTooltip(GameController.massage(element), index);
+          
+          if(!element.isPlayer && this.activeCharacter) {
+            console.log(this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize))
+            if (this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize) === true) {
+              this.gamePlay.setCursor(cursors.crosshair);
+              this.gamePlay.selectCell(index, 'red');
+            } else {
+              this.gamePlay.setCursor(cursors.notallowed);
+            }
+          } else if (!this.activeCharacter) {
+            this.gamePlay.setCursor(cursors.auto);
+            this.gamePlay.deselectCell(index);
+          }
         }
       });
-    }
-    if (this.state.move % 2 === 0 && this.activeCharacter) {
-      if (this.activeCharacter) {
+    } else if (this.state.move % 2 === 0 && this.activeCharacter) {
+      if (this.activeCharacter.calculationRadiusMove(index, this.gamePlay.boardSize)) {
         this.gamePlay.selectCell(index, 'green');
-        if (!this.activeCharacter) {
-          this.gamePlay.setCursor(cursors.auto);
-          this.gamePlay.deselectCell(index)
-        }
+      } else {
+        this.gamePlay.setCursor(cursors.notallowed);
       }
+    } else if (!this.activeCharacter) {
+      this.gamePlay.setCursor(cursors.auto);
+      this.gamePlay.deselectCell(index);
     }
     // TODO: react to mouse enter
   }
@@ -128,7 +170,31 @@ export default class GameController {
     this.gamePlay.selectCell(index);
   }
 
-  goPlayer() {
+  removeSelect(index, arrCharacter) {
+    this.gamePlay.redrawPositions(arrCharacter);
+    this.onCellLeave(index);
+    this.state.move += 1;
+    this.activeCharacter = null;
+    if (this.state.motion % 2 != 0) {
+      this.goEnamy();
+    }
+  }
+
+  goEnamy() {
+    const characterEnamy = [];
+    const characterPlayer = [];
+
+    this.state.positionedCharacters.forEach((character) => {
+      if(!character.isPlayer) {
+        characterEnamy.push(character);
+      } else {
+        characterPlayer.push(character);
+      }
+    });
+
+    characterEnamy.sort((a,b) => a.character.level - b.character.level);
+    characterPlayer.sort((a,b) => a.character.level - b.character.level);
+    
     
   }
 }

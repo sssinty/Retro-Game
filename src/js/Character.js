@@ -25,9 +25,15 @@ export default class Character {
       this.type = type;
     }
     this.level = level;
-    this.attack = 0;
-    this.defence = 0;
+    this.attack = null;
+    this.defence = null;
     this.health = 50;
+    this.radiusAttack = null;
+    this.radiusMotion = null;
     // TODO: выбросите исключение, если кто-то использует "new Character()"
+  }
+
+  getDamage(target) {
+    return Math.max(this.attack - target.defence, this.attack * 0.1)
   }
 }
