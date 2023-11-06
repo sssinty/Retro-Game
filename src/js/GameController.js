@@ -84,36 +84,38 @@ export default class GameController {
         }
       });
 
-    } else if(this.state.move % 2 === 0 && this.activeCharacter) {
+    } else if (this.state.move % 2 === 0 && character && this.activeCharacter) {
       this.state.positionedCharacters.forEach((elem) => {
         if (elem.position === index && !elem.isPlayer && this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize)) {
-          console.log(elem)
           const damage = this.activeCharacter.character.getDamage(elem.character);
           if(elem.character.health - damage > 0) {
             elem.character.health = elem.character.health - damage;
           } else {
             this.state.positionedCharacters = this.state.positionedCharacters.filter(character => character.position !== elem.position);
           }
-          
-          this.gamePlay.showDamage(index, damage).then(
-            this.gamePlay.deselectCell(this.activeCharacter.position),
-            this.removeSelect(index, this.state.positionedCharacters.filter(character => character.condition !== 'death'))
-          )
-
+          this.gamePlay.showDamage(index, damage).then(() => {
+            this.gamePlay.deselectCell(this.activeCharacter.position);
+            this.removeSelect(index, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
+          });
+        } else if(elem.position === index && elem.isPlayer) {
+          this.gamePlay.cells.forEach((cell, i) => {
+            if (cell.className.indexOf('selected-yellow') > -1) {
+              this.gamePlay.deselectCell(i);
+            } else {
+              this.selectCharacter(elem, index);
+            }
+          });
         }
       });
-
-    } else if(this.state.move % 2 === 0 && this.activeCharacter && this.activeCharacter.calculationRadiusMove(index, this.gamePlay.boardSize)) {
-        this.state.positionedCharacters.forEach((elem) => {
+    } else if (this.state.move % 2 === 0 && this.activeCharacter && this.activeCharacter.calculationRadiusMove(index, this.gamePlay.boardSize)) {
+      this.state.positionedCharacters.forEach((elem) => {
         if (elem.position === this.activeCharacter.position) {
           this.gamePlay.deselectCell(this.activeCharacter.position);
-          elem.position = index;
+         elem.position = index;
         }
-      })
-      this.removeSelect(index, this.state.positionedCharacters);
-    }
-    
-
+      });
+      this.removeSelect(index, this.state.positionedCharacters.filter((character) => character.condition !== 'death'));
+    } 
     // TODO: react to click
   }
 
@@ -131,7 +133,6 @@ export default class GameController {
           this.gamePlay.showCellTooltip(GameController.massage(element), index);
           
           if(!element.isPlayer && this.activeCharacter) {
-            console.log(this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize))
             if (this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize) === true) {
               this.gamePlay.setCursor(cursors.crosshair);
               this.gamePlay.selectCell(index, 'red');
@@ -175,14 +176,21 @@ export default class GameController {
     this.onCellLeave(index);
     this.state.move += 1;
     this.activeCharacter = null;
-    if (this.state.motion % 2 != 0) {
+    if (this.state.move % 2 != 0) {
       this.goEnamy();
     }
   }
 
   goEnamy() {
-    const characterEnamy = [];
-    const characterPlayer = [];
+    let characterEnamy = [];
+    let characterPlayer = [];
+    let step = false;
+    let skippPosition = [];
+    let availablePosition = {};
+
+    this.state.positionedCharacters.forEach((character) => {
+      skippPosition.push(character.position);
+    })
 
     this.state.positionedCharacters.forEach((character) => {
       if(!character.isPlayer) {
@@ -194,7 +202,91 @@ export default class GameController {
 
     characterEnamy.sort((a,b) => a.character.level - b.character.level);
     characterPlayer.sort((a,b) => a.character.level - b.character.level);
+
+
+    characterEnamy.forEach((enamy, index) => {
+      availablePosition[index] = [];
+      for(let i = 0; i < this.gamePlay.boardSize ** 8; i += 1) {
+        if(enamy.calculationRadiusMove(i, this.gamePlay.boardSize) && !skippPosition.includes(i) && i !== enamy.position) {
+          availablePosition[index].push(i);
+        }
+      }
+    }) 
     
-    
+    characterEnamy.forEach((heroEnamy) => {
+      characterPlayer.forEach((heroPlayer) => {
+        if(step) {
+          return
+        }
+        if(heroEnamy.calculationRadiusAttack(heroPlayer.position, this.gamePlay.boardSize)) { 
+          step = true
+          this.activeCharacter = heroEnamy;
+          this.gamePlay.selectCell(this.activeCharacter.position);
+          this.gamePlay.selectCell(heroPlayer.position, 'red');
+          const damage = this.activeCharacter.character.getDamage(heroPlayer.character);
+          if(heroPlayer.character.health - damage > 0) {
+            heroPlayer.character.health = heroPlayer.character.health - damage;
+          } else {
+            this.state.positionedCharacters.forEach((character) => {
+              if(character.position === heroPlayer.position) {
+                character.condition = 'death';
+              }
+            });
+
+            characterPlayer = characterPlayer.filter((characterPosition) => characterPosition.position !== heroPlayer.position);
+          }
+          this.gamePlay.showDamage(heroPlayer.position, damage).then(() => {
+            this.gamePlay.deselectCell(this.activeCharacter.position);
+            this.gamePlay.deselectCell(heroPlayer.position);
+            this.removeSelect(this.activeCharacter.position, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
+          });
+        }
+      });
+    });
+
+    if(step) {
+      return
+    }
+
+    characterEnamy.forEach((enamy, index) => {
+      availablePosition[index].forEach((newPosition) => {
+        characterPlayer.forEach((player) => {
+          if (step) {
+            return
+          }
+          let pastPosition = enamy.position;
+          enamy.position = newPosition;
+          console.log(player)
+          if (enamy.calculationRadiusMove(enamy.position, this.gamePlay.boardSize)) {
+            step = true;
+            this.gamePlay.selectCell(newPosition, 'green');
+            enamy.position = pastPosition;
+            this.activeCharacter = enamy;
+            this.gamePlay.selectCell(this.activeCharacter.position);
+            this.activeCharacter.position = newPosition;
+            this.gamePlay.deselectCell(pastPosition);
+            this.removeSelect(this.activeCharacter.position, this.state.positionedCharacters);
+          } else {
+            step = true;
+            enamy.position = pastPosition;
+            let randomCharcter = getRandomNumb(0, characterEnamy.length - 1);
+            let randomIndexPosition = getRandomNumb(0, availablePosition[randomCharcter].length - 1);
+            let randomPosition = availablePosition[randomCharcter][randomIndexPosition];
+
+            this.activeCharacter = characterEnamy[randomIndexPosition];
+            this.gamePlay.selectCell(this.activeCharacter.position);
+            this.gamePlay.selectCell(randomPosition, 'green');
+
+            this.state.positionedCharacters.forEach((elem) => {
+              this.gamePlay.deselectCell(this.activeCharacter.position);
+              elem.position = randomPosition;
+              this.gamePlay.deselectCell(randomPosition);
+            });
+            this.removeSelect(randomPosition, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
+          }
+        })
+      })
+    }) 
+
   }
 }

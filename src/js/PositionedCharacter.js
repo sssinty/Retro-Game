@@ -19,8 +19,6 @@ export default class PositionedCharacter {
   }
 
   calculationRadiusMove(index, boardSize) {
-    console.log(this.character)
-    console.log(this.character.radiusMove)
     return this.calculatRadius(index, boardSize, this.character.radiusMove);
   }
   
