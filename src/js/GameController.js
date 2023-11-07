@@ -3,8 +3,8 @@ import character from './character/character';
 import PositionedCharacter from './PositionedCharacter';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
-import cursors from './cursors'
-import { getThemes }from './themes'
+import cursors from './cursors';
+import { getThemes }from './themes';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -61,13 +61,25 @@ export default class GameController {
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+    this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
+  }
+
+  onNewGame() {
+    this.activeCharacter = null;
+    this.state = new GameState();
+
+    this.init();
   }
 
   onCellClick(index) {  
+    if (this.fieldActivity) {
+      return
+    }
+
     const elem = this.gamePlay.cells[index];
     const character = elem.querySelector('.character');
   
-      if(this.state.move % 2 === 0 && character && !this.activeCharacter) {
+      if (this.state.move % 2 === 0 && character && !this.activeCharacter) {
         this.state.positionedCharacters.forEach((element) => {
           if (element.position === index && !element.isPlayer) {
             GamePlay.showError('Персонаж противника недоступен!');
@@ -87,7 +99,7 @@ export default class GameController {
       this.state.positionedCharacters.forEach((elem) => {
         if (elem.position === index && !elem.isPlayer && this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize)) {
           const damage = this.activeCharacter.character.getDamage(elem.character);
-          if(elem.character.health - damage > 0) {
+          if (elem.character.health - damage > 0) {
             elem.character.health = elem.character.health - damage;
           } else {
             this.state.positionedCharacters = this.state.positionedCharacters.filter(character => character.position !== elem.position);
@@ -96,7 +108,7 @@ export default class GameController {
             this.gamePlay.deselectCell(this.activeCharacter.position);
             this.removeSelect(index, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
           });
-        } else if(elem.position === index && elem.isPlayer) {
+        } else if (elem.position === index && elem.isPlayer) {
           this.gamePlay.cells.forEach((cell, i) => {
             if (cell.className.indexOf('selected-yellow') > -1) {
               this.gamePlay.deselectCell(i);
@@ -123,15 +135,18 @@ export default class GameController {
   }
 
   onCellEnter(index) {
+    if (this.fieldActivity) {
+      return
+    }
     const cell = this.gamePlay.cells[index];
     const character = cell.querySelector('.character');
 
     if (this.state.move % 2 === 0 && character) {
       this.state.positionedCharacters.forEach((element) => {
-        if(element.position === index) {
+        if (element.position === index) {
           this.gamePlay.showCellTooltip(GameController.massage(element), index);
           
-          if(!element.isPlayer && this.activeCharacter) {
+          if (!element.isPlayer && this.activeCharacter) {
             if (this.activeCharacter.calculationRadiusAttack(index, this.gamePlay.boardSize) === true) {
               this.gamePlay.setCursor(cursors.crosshair);
               this.gamePlay.selectCell(index, 'red');
@@ -158,6 +173,10 @@ export default class GameController {
   }
 
   onCellLeave(index) {
+    if(this.fieldActivity) {
+      return
+    }
+
     this.gamePlay.hideCellTooltip(index);
     this.gamePlay.setCursor(cursors.pointer);
     this.gamePlay.cells[index].classList.remove('selected-green');
@@ -238,7 +257,7 @@ export default class GameController {
     if(characterEnamy.length === 0) {
       if(this.state.levelGame === 3) {
         this.state.victory += 1;
-        console.log('game over')
+        this.fieldActivity = true;
       } else {
         this.state.victory += 1;
         this.upLevel(3);
@@ -262,6 +281,7 @@ export default class GameController {
         if(step) {
           return
         }
+
         if(heroEnamy.calculationRadiusAttack(heroPlayer.position, this.gamePlay.boardSize)) { 
           step = true
           this.activeCharacter = heroEnamy;
@@ -287,6 +307,7 @@ export default class GameController {
 
           if(characterPlayer.length === 0) {
             this.state.defeat += 1;
+            this.fieldActivity = true;
           }
         }
       });
@@ -344,6 +365,7 @@ export default class GameController {
 
     if(characterPlayer.length === 0) {
       this.state.defeat += 1;
+      this.fieldActivity = true;
     }
   }
 }

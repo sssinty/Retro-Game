@@ -5,6 +5,7 @@ export default class GameState {
     this.levelGame = 0;
     this.defeat = 0;
     this.victory = 0
+    this.fieldActivity = false
   }
   static from(object) {
     if (object) {
