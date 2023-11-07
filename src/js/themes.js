@@ -5,4 +5,7 @@ const themes = {
   mountain: 'mountain',
 };
 
+export function getThemes() {
+  return Object.keys(themes)
+}
 export default themes;

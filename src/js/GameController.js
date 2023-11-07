@@ -1,10 +1,10 @@
-import { generateTeam, getRandomNumb} from './generators';
+import { generateTeam, getRandomNumb } from './generators';
 import character from './character/character';
 import PositionedCharacter from './PositionedCharacter';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
 import cursors from './cursors'
-import themes from './themes'
+import { getThemes }from './themes'
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -15,28 +15,27 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.drawUi(themes.mountain);
-    this.crateCharacter();
+    const player = generateTeam([character.bowman, character.swordsman, character.magician], 1, 2);
+    const enamy = generateTeam([character.vampire, character.daemon, character.undead], 1, 2);
+    this.gamePlay.drawUi(getThemes()[0]);
+    this.crateCharacter(player, enamy, []);
     this.registrationEvents();
   }
 
-  crateCharacter() {
-    const player = generateTeam([character.bowman, character.swordsman, character.magician], 3, 2);
-    const enamy = generateTeam([character.vampire, character.daemon, character.undead], 3, 2);
-    const arrPosition = [];
-
+  crateCharacter(player, enamy, arrPosition) {
     player.forEach((character) => {
       const playerArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, 0, 1, this.gamePlay.boardSize, arrPosition);
       const positionedCharacters = new PositionedCharacter(character, playerArrayPosition);
-      this.state.positionedCharacters.push(positionedCharacters);
       positionedCharacters.isPlayer = true;
+      positionedCharacters.condition = 'live';
+      this.state.positionedCharacters.push(positionedCharacters);
       arrPosition.push(positionedCharacters);
     })
-
     enamy.forEach((character) => {
       const enamyArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, this.gamePlay.boardSize - 2, this.gamePlay.boardSize - 1, this.gamePlay.boardSize, arrPosition);
       const positionedCharacters = new PositionedCharacter(character, enamyArrayPosition);
       positionedCharacters.isPlayer = false;
+      positionedCharacters.condition = 'live';
       this.state.positionedCharacters.push(positionedCharacters);
       arrPosition.push(positionedCharacters);
     });
@@ -181,6 +180,42 @@ export default class GameController {
     }
   }
 
+  upLevel(numbOfCharacters) {
+    this.state.levelGame += 1;
+    this.activeCharacter = null;
+    this.state.move = 0;
+    
+    this.gamePlay.drawUi(getThemes()[this.state.levelGame])
+
+    const newCharacterPlayer = generateTeam([character.bowman, character.swordsman, character.magician], this.state.levelGame + 1, numbOfCharacters - this.state.positionedCharacters.length);
+    const newCharacterEnamy = generateTeam([character.vampire, character.daemon, character.undead], this.state.levelGame + 1, numbOfCharacters);
+
+
+    this.state.positionedCharacters.forEach((element) => {
+      if(element.condition === 'live') {
+        element.character.level += 1;
+        element.character.attack = Math.max(element.character.attack, element.character.attack * (80 + element.character.health) / 100);
+        element.character.attack = Math.max(element.character.defence, element.character.defence * (80 + element.character.health) / 100);
+        if(element.character.health + 80 > 100) {
+          element.character.health = 100;
+        } else {
+          element.character.health +=  80;
+        }
+      } else {
+        element.character.health = 50;
+      }
+    });
+
+    this.state.positionedCharacters.forEach((element) => {
+      console.log(this.state.positionedCharacters)
+      newCharacterPlayer.push(element.character);
+    });
+
+    this.state.positionedCharacters = [];
+    this.crateCharacter(newCharacterPlayer, newCharacterEnamy, []);
+    this.gamePlay.redrawPositions(this.state.positionedCharacters);
+  }
+
   goEnamy() {
     let characterEnamy = [];
     let characterPlayer = [];
@@ -195,11 +230,20 @@ export default class GameController {
     this.state.positionedCharacters.forEach((character) => {
       if(!character.isPlayer) {
         characterEnamy.push(character);
-      } else {
+      } else if (character.condition === 'live'){
         characterPlayer.push(character);
       }
     });
 
+    if(characterEnamy.length === 0) {
+      if(this.state.levelGame === 3) {
+        this.state.victory += 1;
+        console.log('game over')
+      } else {
+        this.state.victory += 1;
+        this.upLevel(3);
+      }
+    }
     characterEnamy.sort((a,b) => a.character.level - b.character.level);
     characterPlayer.sort((a,b) => a.character.level - b.character.level);
 
@@ -240,6 +284,10 @@ export default class GameController {
             this.gamePlay.deselectCell(heroPlayer.position);
             this.removeSelect(this.activeCharacter.position, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
           });
+
+          if(characterPlayer.length === 0) {
+            this.state.defeat += 1;
+          }
         }
       });
     });
@@ -249,6 +297,7 @@ export default class GameController {
     }
 
     characterEnamy.forEach((enamy, index) => {
+      console.log(availablePosition)
       availablePosition[index].forEach((newPosition) => {
         characterPlayer.forEach((player) => {
           if (step) {
@@ -256,37 +305,45 @@ export default class GameController {
           }
           let pastPosition = enamy.position;
           enamy.position = newPosition;
-          console.log(player)
-          if (enamy.calculationRadiusMove(enamy.position, this.gamePlay.boardSize)) {
+          if (enamy.calculationRadiusAttack(player.position, this.gamePlay.boardSize)) {
             step = true;
             this.gamePlay.selectCell(newPosition, 'green');
             enamy.position = pastPosition;
             this.activeCharacter = enamy;
             this.gamePlay.selectCell(this.activeCharacter.position);
             this.activeCharacter.position = newPosition;
+
             this.gamePlay.deselectCell(pastPosition);
             this.removeSelect(this.activeCharacter.position, this.state.positionedCharacters);
+
           } else {
             step = true;
             enamy.position = pastPosition;
-            let randomCharcter = getRandomNumb(0, characterEnamy.length - 1);
-            let randomIndexPosition = getRandomNumb(0, availablePosition[randomCharcter].length - 1);
-            let randomPosition = availablePosition[randomCharcter][randomIndexPosition];
 
-            this.activeCharacter = characterEnamy[randomIndexPosition];
+            let randomIndexCharcter = getRandomNumb(0, characterEnamy.length - 1);
+            let randomIndexPosition = getRandomNumb(0, availablePosition[randomIndexCharcter].length - 1);
+            let randomPosition = availablePosition[randomIndexCharcter][randomIndexPosition];
+
+            this.activeCharacter = characterEnamy[randomIndexCharcter];
             this.gamePlay.selectCell(this.activeCharacter.position);
+            console.log(randomPosition)
             this.gamePlay.selectCell(randomPosition, 'green');
 
             this.state.positionedCharacters.forEach((elem) => {
-              this.gamePlay.deselectCell(this.activeCharacter.position);
-              elem.position = randomPosition;
-              this.gamePlay.deselectCell(randomPosition);
+              if(elem.position === this.activeCharacter.position) {
+                this.gamePlay.deselectCell(this.activeCharacter.position);
+                elem.position = randomPosition;
+                this.gamePlay.deselectCell(randomPosition);
+              }
             });
             this.removeSelect(randomPosition, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
           }
-        })
-      })
-    }) 
+        });
+      });
+    });
 
+    if(characterPlayer.length === 0) {
+      this.state.defeat += 1;
+    }
   }
 }

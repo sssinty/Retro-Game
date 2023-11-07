@@ -2,14 +2,19 @@ export default class GameState {
   constructor() {
     this.move = 0;
     this.positionedCharacters = [];
-    this.condition = 'live'
+    this.levelGame = 0;
+    this.defeat = 0;
+    this.victory = 0
   }
   static from(object) {
     if (object) {
       return {
         move: object.move,
         positionedCharacters: object.positionedCharacters,
-        condition: object.condition
+        condition: object.condition,
+        levelGame: object.levelGame,
+        defeat: object.defeat,
+        victory: object.victory
       }
     }
     // TODO: create object
