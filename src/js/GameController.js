@@ -48,14 +48,14 @@ export default class GameController {
       let position;
       let index = 0;
 
-      while ((!position || usedPosition.includes(position)) && index < 1000) {
+      while ((!position || usedPosition.some(elem => elem.position === position)) && index < 1000) {
         let string = getRandomNumb(minString, maxString);
         let column = getRandomNumb(minColumn, maxColumn);
 
         position = string * boardSize + column;
         index += 1;
       }
-
+      console.log(usedPosition.some(elem => elem.position === position), position)
       return position;
     }
   }
