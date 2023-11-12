@@ -19,8 +19,8 @@ export default class GameController {
 
     const player = generateTeam([characters.bowman, characters.swordsman, characters.magician], 1, 2);
     const enamy = generateTeam([characters.vampire, characters.daemon, characters.undead], 1, 2);
-
-    this.crateCharacter(player, enamy, []);
+    const usedPosition = []
+    this.crateCharacter(player, enamy, usedPosition);
     this.registrationEvents();
   }
 
@@ -47,7 +47,7 @@ export default class GameController {
     function createPosition(minString, maxString, minColumn, maxColumn, boardSize, usedPosition) {
       let position;
       let index = 0;
-
+      
       while ((!position || usedPosition.includes(position)) && index < 1000) {
         let string = getRandomNumb(minString, maxString);
         let column = getRandomNumb(minColumn, maxColumn);
@@ -55,7 +55,6 @@ export default class GameController {
         position = string * boardSize + column;
         index += 1;
       }
-
       return position;
     }
   }
