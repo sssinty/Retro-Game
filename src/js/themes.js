@@ -6,6 +6,6 @@ const themes = {
 };
 
 export function getThemes() {
-  return Object.keys(themes)
+  return Object.keys(themes);
 }
 export default themes;

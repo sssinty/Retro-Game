@@ -236,7 +236,7 @@ export default class GameController {
     this.activeCharacter = null;
     this.state.move = 0;
     
-    this.gamePlay.drawUi(getThemes()[this.state.levelGame])
+    this.gamePlay.drawUi(getThemes()[this.state.levelGame]);
 
     const newCharacterPlayer = generateTeam([characters.bowman, characters.swordsman, characters.magician], this.state.levelGame + 1, numbOfCharacters - this.state.positionedCharacters.length);
     const newCharacterEnamy = generateTeam([characters.vampire, characters.daemon, characters.undead], this.state.levelGame + 1, numbOfCharacters);
@@ -258,7 +258,6 @@ export default class GameController {
     });
 
     this.state.positionedCharacters.forEach((element) => {
-      console.log(this.state.positionedCharacters)
       newCharacterPlayer.push(element.character);
     });
 
@@ -301,7 +300,7 @@ export default class GameController {
 
     characterEnamy.forEach((enamy, index) => {
       availablePosition[index] = [];
-      for(let i = 0; i < this.gamePlay.boardSize ** 2; i += 1) {
+      for (let i = 0; i < this.gamePlay.boardSize ** 2; i += 1) {
         if(enamy.calculationRadiusMove(i, this.gamePlay.boardSize) && !skippPosition.includes(i) && i !== enamy.position) {
           availablePosition[index].push(i);
         }
@@ -310,17 +309,17 @@ export default class GameController {
     
     characterEnamy.forEach((heroEnamy) => {
       characterPlayer.forEach((heroPlayer) => {
-        if(step) {
+        if (step) {
           return
         }
 
-        if(heroEnamy.calculationRadiusAttack(heroPlayer.position, this.gamePlay.boardSize)) { 
+        if (heroEnamy.calculationRadiusAttack(heroPlayer.position, this.gamePlay.boardSize)) { 
           step = true
           this.activeCharacter = heroEnamy;
           this.gamePlay.selectCell(this.activeCharacter.position);
           this.gamePlay.selectCell(heroPlayer.position, 'red');
           const damage = this.activeCharacter.character.getDamage(heroPlayer.character);
-          if(heroPlayer.character.health - damage > 0) {
+          if (heroPlayer.character.health - damage > 0) {
             heroPlayer.character.health = heroPlayer.character.health - damage;
           } else {
             this.state.positionedCharacters.forEach((character) => {
@@ -337,7 +336,7 @@ export default class GameController {
             this.removeSelect(this.activeCharacter.position, this.state.positionedCharacters.filter(character => character.condition !== 'death'));
           });
 
-          if(characterPlayer.length === 0) {
+          if (characterPlayer.length === 0) {
             this.state.defeat += 1;
             this.fieldActivity = true;
           }
@@ -345,12 +344,11 @@ export default class GameController {
       });
     });
 
-    if(step) {
+    if (step) {
       return
     }
 
     characterEnamy.forEach((enamy, index) => {
-      console.log(availablePosition)
       availablePosition[index].forEach((newPosition) => {
         characterPlayer.forEach((player) => {
           if (step) {
@@ -379,11 +377,10 @@ export default class GameController {
 
             this.activeCharacter = characterEnamy[randomIndexCharcter];
             this.gamePlay.selectCell(this.activeCharacter.position);
-            console.log(randomPosition)
             this.gamePlay.selectCell(randomPosition, 'green');
 
             this.state.positionedCharacters.forEach((elem) => {
-              if(elem.position === this.activeCharacter.position) {
+              if (elem.position === this.activeCharacter.position) {
                 this.gamePlay.deselectCell(this.activeCharacter.position);
                 elem.position = randomPosition;
                 this.gamePlay.deselectCell(randomPosition);
@@ -395,7 +392,7 @@ export default class GameController {
       });
     });
 
-    if(characterPlayer.length === 0) {
+    if (characterPlayer.length === 0) {
       this.state.defeat += 1;
       this.fieldActivityBlock = true;
     }

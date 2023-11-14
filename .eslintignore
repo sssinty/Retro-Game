@@ -1,1 +1,4 @@
 dist
+index.js
+webpack.config.js
+coverage
