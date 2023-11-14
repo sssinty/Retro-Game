@@ -9,7 +9,7 @@
     "serve": "webpack serve --open --mode development",
     "dev": "webpack serve --mode development",
     "bulid-webpack": "webpack",
-    "test": "jest --coverage"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
