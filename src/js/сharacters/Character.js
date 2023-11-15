@@ -11,5 +11,5 @@ export default {
   magician: Magician,
   swordsman: Swordsman,
   undead: Undead,
-  vampire: Vampire
-}
+  vampire: Vampire,
+};

@@ -4,9 +4,10 @@ export default class GameState {
     this.positionedCharacters = [];
     this.levelGame = 0;
     this.defeat = 0;
-    this.victory = 0
-    this.fieldActivityBlock = false
+    this.victory = 0;
+    this.fieldActivityBlock = false;
   }
+
   static from(object) {
     if (object) {
       return {
@@ -14,8 +15,8 @@ export default class GameState {
         positionedCharacters: object.positionedCharacters,
         levelGame: object.levelGame,
         defeat: object.defeat,
-        victory: object.victory
-      }
+        victory: object.victory,
+      };
     }
     // TODO: create object
     return null;

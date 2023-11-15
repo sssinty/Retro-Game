@@ -14,9 +14,8 @@
  */
 export default class Character {
   constructor(level, type = 'generic') {
-    // console.log(new.target.name)
-    if (new.target.name === "Character") {
-      throw new Error("Error, parent class creation is not available");
+    if (new.target.name === 'Character') {
+      throw new Error('Error, parent class creation is not available');
     }
     const typeObject = ['bowman', 'swordsman', 'magician', 'undead', 'vampire', 'daemon'];
     if (!typeObject.includes(type)) {
@@ -34,6 +33,6 @@ export default class Character {
   }
 
   getDamage(target) {
-    return Math.max(this.attack - target.defence, this.attack * 0.1)
+    return Math.max(this.attack - target.defence, this.attack * 0.1);
   }
 }

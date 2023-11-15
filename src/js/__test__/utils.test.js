@@ -1,4 +1,4 @@
-import { calcTileType } from '../utils';
+import { calcTileType, calcHealthLevel } from '../utils';
 
 test('test field position', () => {
   expect(calcTileType(0, 8)).toBe('top-left');
@@ -10,5 +10,10 @@ test('test field position', () => {
   expect(calcTileType(8, 8)).toBe('left');
   expect(calcTileType(15, 8)).toBe('right');
   expect(calcTileType(12, 8)).toBe('center');
-}
-);
+});
+
+test('health indicator when leveling up', () => {
+  expect(calcHealthLevel(10)).toBe('critical');
+  expect(calcHealthLevel(45)).toBe('normal');
+  expect(calcHealthLevel(100)).toBe('high');
+});

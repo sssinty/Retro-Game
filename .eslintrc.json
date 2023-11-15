@@ -6,6 +6,15 @@
       "jest": true
   },
   "rules": {
+    "linebreak-style": "off",
+    "max-len": "off",
+    "no-param-reassign":"off",
+    "no-loop-func":"off",
+    "guard-for-in":"off",
+    "consistent-return":"off",
+    "no-new":"off",
+    "eol-last":"off",
+    "no-alert":"off",
       "no-restricted-syntax": [
           "error",
           "LabeledStatement",

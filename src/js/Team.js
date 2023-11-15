@@ -15,7 +15,8 @@ export default class Team {
   constructor() {
     this.storage = [];
   }
-  add(character){
+
+  add(character) {
     this.storage.push(character);
   }
 }

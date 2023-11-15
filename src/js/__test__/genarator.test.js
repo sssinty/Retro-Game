@@ -1,7 +1,11 @@
-import { characterGenerator, generateTeam } from '../generators';
-import Bowman from '../character/Bowman';
-import Swordsman from '../character/Swordsman';
-import Magician from '../character/Magician';
+import { characterGenerator, generateTeam, getRandomNumb } from '../generators';
+import Bowman from '../сharacters/Bowman';
+import Swordsman from '../сharacters/Swordsman';
+import Magician from '../сharacters/Magician';
+
+test('genarator random numb', () => {
+  expect(getRandomNumb(1, 1)).toBe(1);
+});
 
 test('test generator character', () => {
   const generator = characterGenerator([Bowman, Swordsman, Magician], 2);
@@ -11,9 +15,10 @@ test('test generator character', () => {
       expect(result).toEqual(undefined);
     }
     expect(result).toEqual(result);
-  };
-})
-test ('test range create lvl character', () => {
+  }
+});
+
+test('test range create lvl character', () => {
   const result = generateTeam([Bowman, Swordsman, Magician], 3, 3);
   for (let i = 0; i < result.length; i += 1) {
     expect(result[i].level).toBe(result[i].level);

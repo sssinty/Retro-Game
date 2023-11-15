@@ -162,7 +162,7 @@ export default class GamePlay {
   }
 
   onNewGameClick(event) {
-    event.preventDefault(); 
+    event.preventDefault();
     this.newGameListeners.forEach((o) => o.call(null));
   }
 

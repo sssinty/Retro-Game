@@ -1,4 +1,4 @@
-import Character from './Character';
+import Character from './Сharacter';
 
 export default class PositionedCharacter {
   constructor(character, position) {
@@ -21,11 +21,10 @@ export default class PositionedCharacter {
   calculationRadiusMove(index, boardSize) {
     return this.calculatRadius(index, boardSize, this.character.radiusMove);
   }
-  
+
   calculatRadius(index, boardSize, num) {
-    const position = this.position;
-    const myСolumn = position % boardSize;
-    const myString = Math.floor(position / boardSize);
+    const myСolumn = this.position % boardSize;
+    const myString = Math.floor(this.position / boardSize);
     const requiredСolumn = index % boardSize;
     const requiredString = Math.floor(index / boardSize);
     const differenceString = Math.abs(myString - requiredString);
