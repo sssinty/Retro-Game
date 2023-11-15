@@ -14,8 +14,8 @@
  */
 export default class Character {
   constructor(level, type) {
-    if (new.target.name === "Character") {
-      throw new Error("Error, parent class creation is not available");
+    if (new.target.name === 'Character') {
+      throw new Error('Error, parent class creation is not available');
     }
     const typeObject = ['bowman', 'swordsman', 'magician', 'undead', 'vampire', 'daemon'];
     if (!typeObject.includes(type)) {
