@@ -33,6 +33,6 @@ export default class Character {
   }
 
   getDamage(target) {
-    return Math.max(this.attack - target.defence, this.attack * 0.1);
+    return Math.ceil(Math.max(this.attack - target.defence, this.attack * 0.1));
   }
 }
