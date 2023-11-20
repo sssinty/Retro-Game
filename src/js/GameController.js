@@ -15,21 +15,21 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.drawUi(getThemes()[0]);
+    this.gamePlay.drawUi(getThemes(0));
 
     const player = generateTeam([characters.bowman, characters.swordsman, characters.magician], 1, 2);
     const enamy = generateTeam([characters.vampire, characters.daemon, characters.undead], 1, 2);
     const usedPosition = [];
-    this.crateCharacter(player, enamy, usedPosition);
+    this.createCharacter(player, enamy, usedPosition);
     this.registrationEvents();
   }
 
-  crateCharacter(player, enamy, arrPosition) {
+  createCharacter(player, enamy, arrPosition) {
     function createPosition(minString, maxString, minColumn, maxColumn, boardSize, usedPosition) {
       let position;
       let index = 0;
 
-      while ((!position || usedPosition.some((elem) => elem.position === position)) && index < 1000) {
+      while ((!position || usedPosition.some((elem) => elem.position === position)) && index < boardSize ** 2) {
         const string = getRandomNumb(minString, maxString);
         const column = getRandomNumb(minColumn, maxColumn);
 
@@ -39,21 +39,24 @@ export default class GameController {
       return position;
     }
 
-    player.forEach((character) => {
-      const playerArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, 0, 1, this.gamePlay.boardSize, arrPosition);
-      const positionedCharacters = new PositionedCharacter(character, playerArrayPosition);
-      positionedCharacters.isPlayer = true;
-      positionedCharacters.condition = 'live';
-      this.state.positionedCharacters.push(positionedCharacters);
-      arrPosition.push(positionedCharacters);
-    });
-    enamy.forEach((character) => {
-      const enamyArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, this.gamePlay.boardSize - 2, this.gamePlay.boardSize - 1, this.gamePlay.boardSize, arrPosition);
-      const positionedCharacters = new PositionedCharacter(character, enamyArrayPosition);
-      positionedCharacters.isPlayer = false;
-      positionedCharacters.condition = 'live';
-      this.state.positionedCharacters.push(positionedCharacters);
-      arrPosition.push(positionedCharacters);
+    [...player, ...enamy].forEach((character) => {
+      if (['vampire', 'daemon', 'undead'].includes(character.type)) {
+        const enamyArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, this.gamePlay.boardSize - 2, this.gamePlay.boardSize - 1, this.gamePlay.boardSize, arrPosition);
+        const positionedCharacters = new PositionedCharacter(character, enamyArrayPosition);
+
+        positionedCharacters.isPlayer = false;
+        positionedCharacters.condition = 'live';
+        this.state.positionedCharacters.push(positionedCharacters);
+        arrPosition.push(positionedCharacters);
+      } else {
+        const playerArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, 0, 1, this.gamePlay.boardSize, arrPosition);
+        const positionedCharacters = new PositionedCharacter(character, playerArrayPosition);
+
+        positionedCharacters.isPlayer = true;
+        positionedCharacters.condition = 'live';
+        this.state.positionedCharacters.push(positionedCharacters);
+        arrPosition.push(positionedCharacters);
+      }
     });
 
     this.gamePlay.redrawPositions(arrPosition);
@@ -100,12 +103,12 @@ export default class GameController {
     });
 
     this.activeCharacter = null;
-    this.gamePlay.drawUi(getThemes()[this.state.levelGame]);
+    this.gamePlay.drawUi(getThemes([this.state.levelGame]));
     this.gamePlay.redrawPositions(this.state.positionedCharacters.filter((character) => character.condition !== 'death'));
   }
 
   onCellClick(index) {
-    if (this.fieldActivityBlock) {
+    if (this.state.fieldActivityBlock) {
       return;
     }
 
@@ -167,7 +170,7 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    if (this.fieldActivityBlock) {
+    if (this.state.fieldActivityBlock) {
       return;
     }
     const cell = this.gamePlay.cells[index];
@@ -205,7 +208,7 @@ export default class GameController {
   }
 
   onCellLeave(index) {
-    if (this.fieldActivity) {
+    if (this.state.fieldActivity) {
       return;
     }
 
@@ -236,7 +239,7 @@ export default class GameController {
     this.activeCharacter = null;
     this.state.move = 0;
 
-    this.gamePlay.drawUi(getThemes()[this.state.levelGame]);
+    this.gamePlay.drawUi(getThemes(this.state.levelGame));
 
     const newCharacterPlayer = generateTeam([characters.bowman, characters.swordsman, characters.magician], this.state.levelGame + 1, numbOfCharacters - this.state.positionedCharacters.length);
     const newCharacterEnamy = generateTeam([characters.vampire, characters.daemon, characters.undead], this.state.levelGame + 1, numbOfCharacters);
