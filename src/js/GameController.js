@@ -37,23 +37,23 @@ export default class GameController {
     }
 
     [...player, ...enamy].forEach((character) => {
+      let positionedCharacters;
       if (['vampire', 'daemon', 'undead'].includes(character.type)) {
         const enamyArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, this.gamePlay.boardSize - 2, this.gamePlay.boardSize - 1, this.gamePlay.boardSize, arrPosition);
-        const positionedCharacters = new PositionedCharacter(character, enamyArrayPosition);
+        positionedCharacters = new PositionedCharacter(character, enamyArrayPosition);
 
         positionedCharacters.isPlayer = false;
         positionedCharacters.condition = 'live';
-        this.state.positionedCharacters.push(positionedCharacters);
-        arrPosition.push(positionedCharacters);
       } else {
         const playerArrayPosition = createPosition(0, this.gamePlay.boardSize - 1, 0, 1, this.gamePlay.boardSize, arrPosition);
-        const positionedCharacters = new PositionedCharacter(character, playerArrayPosition);
+        positionedCharacters = new PositionedCharacter(character, playerArrayPosition);
 
         positionedCharacters.isPlayer = true;
         positionedCharacters.condition = 'live';
-        this.state.positionedCharacters.push(positionedCharacters);
-        arrPosition.push(positionedCharacters);
       }
+
+      this.state.positionedCharacters.push(positionedCharacters);
+      arrPosition.push(positionedCharacters);
     });
 
     this.gamePlay.redrawPositions(arrPosition);
@@ -245,8 +245,8 @@ export default class GameController {
     this.state.positionedCharacters.forEach((element) => {
       if (element.condition === 'live') {
         element.character.level += 1;
-        element.character.attack = Math.max((element.character.attack, element.character.attack * (80 + element.character.health)) / 100);
-        element.character.attack = Math.max((element.character.defence, element.character.defence * (80 + element.character.health)) / 100);
+        element.character.attack = Math.ceil(Math.max((element.character.attack, element.character.attack * (80 + element.character.health)) / 100));
+        element.character.defence = Math.ceil(Math.max((element.character.defence, element.character.defence * (80 + element.character.health)) / 100));
         if (element.character.health + 80 > 100) {
           element.character.health = 100;
         } else {
